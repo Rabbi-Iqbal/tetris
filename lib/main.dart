@@ -47,6 +47,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   bool isValidMove(tetromino) {
     for (var i = 0; i < tetromino.length; i++) {
+      if (currentTetromino.contains(tetromino[i])) continue;
       if (tetromino[i] >= noOfCells || currentGrid[tetromino[i]] != null) {
         return false;
       }
@@ -62,7 +63,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void startTimer() {
-    currentTetromino = new List.from(tetrominoes[currentTetrominoType]);
+    // currentTetromino = new List.from(tetrominoes[currentTetrominoType]);
+    currentTetromino = [4, 14, 24, 34];
     currentRotation = 0;
 
     Timer.periodic(
@@ -92,36 +94,40 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void moveLeft() {
     setState(() {
-      bool canMove = currentGrid[currentTetromino.first - 1] == null &&
-          currentTetromino.every((pos) => pos % 10 > 0);
+      //check if there a free cell to the left
+      bool canMove = currentTetromino.first % 10 > 0;
+      
+      //compute the new position and check it it is valid. This will take care of the collision.
+      List<int> newPosition = currentTetromino.map((e) => e - 1).toList();
 
-      if (canMove) {
+      if (canMove && isValidMove(newPosition)) {
         currentTetromino.forEach((pos) {
           currentGrid[pos] = null;
         });
-        currentTetromino = currentTetromino.map((e) => e - 1).toList();
+        newPosition.forEach((pos) {
+          currentGrid[pos] = currentTetrominoType;
+        });
+        currentTetromino = newPosition;
       }
-      currentTetromino.forEach((pos) {
-        currentGrid[pos] = currentTetrominoType;
-      });
     });
   }
 
   void moveRight() {
     setState(() {
-      bool canMove = currentGrid[currentTetromino.last + 1] == null &&
-          currentTetromino.every((pos) => pos % 10 < 9);
-      if (canMove) {
+      bool canMove = currentTetromino.first % 10 < 9;
+      List<int> newPosition = currentTetromino.map((e) => e + 1).toList();
+      if (canMove && isValidMove(newPosition)) {
         currentTetromino.forEach((pos) {
           currentGrid[pos] = null;
         });
-        currentTetromino = currentTetromino.map((e) => e + 1).toList();
+        newPosition.forEach((pos) {
+          currentGrid[pos] = currentTetrominoType;
+        });
+        currentTetromino = newPosition;
       }
-      currentTetromino.forEach((pos) {
-        currentGrid[pos] = currentTetrominoType;
-      });
     });
   }
+
 
   @override
   Widget build(BuildContext context) {
