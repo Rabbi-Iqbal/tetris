@@ -46,6 +46,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   bool gameInProgress = false;
 
+  int score = 0;
+
   late Timer _timer;
 
   bool isValidMove(tetromino) {
@@ -286,9 +288,12 @@ class _MyHomePageState extends State<MyHomePage> {
         }
       }
       if (filled) {
-        currentGrid.removeRange(i, i + 10);
-        List<int?> emptyRow = List.generate(10, (index) => null);
-        currentGrid = [...emptyRow, ...currentGrid];
+        setState(() {
+          currentGrid.removeRange(i, i + 10);
+          List<int?> emptyRow = List.generate(10, (index) => null);
+          currentGrid = [...emptyRow, ...currentGrid];
+          score += 100;
+        });
       }
     }
   }
@@ -550,10 +555,6 @@ class _MyHomePageState extends State<MyHomePage> {
                                 (index) => Padding(
                                       padding: const EdgeInsets.all(2.0),
                                       child: Container(
-                                        child: Text(index.toString(),
-                                            style: TextStyle(
-                                              color: Colors.red,
-                                            )),
                                         color: currentGrid[index] != null
                                             ? Colors.white
                                             : Colors.black,
@@ -615,9 +616,50 @@ class _MyHomePageState extends State<MyHomePage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        Container(
+                          width: 140,
+                          height: 100,
+                          color: Colors.black,
+                          child: Center(
+                            child: Container(
+                              height: 70,
+                              width: 110,
+                              color: Colors.grey,
+                              child: Center(
+                                child: Text(score.toString(),
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 30,
+                                        fontWeight: FontWeight.bold)),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Container(
+                          width: 140,
+                          height: 35,
+                          margin: EdgeInsets.only(bottom: 30.0),
+                          decoration: new BoxDecoration(
+                              color: Colors.deepPurple,
+                              borderRadius: new BorderRadius.only(
+                                bottomLeft: const Radius.circular(5.0),
+                                bottomRight: const Radius.circular(5.0),
+                              )),
+                          child: Center(
+                            child: Center(
+                              child: Text('Score',
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 20)),
+                            ),
+                          ),
+                        ),
                         ElevatedButton(
                             onPressed: gameInProgress ? null : handleStartClick,
-                            child: Text('START GAME'),
+                            child: Text(
+                              'START GAME',
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 20),
+                            ),
                             style: ElevatedButton.styleFrom(
                                 fixedSize: Size(140, 60),
                                 primary: Colors.deepPurple))
