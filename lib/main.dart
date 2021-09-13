@@ -653,6 +653,26 @@ class _MyHomePageState extends State<MyHomePage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Container(
+                          margin: EdgeInsets.only(left: 40),
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'KEYBOARD CONTROLS',
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                SizedBox(height: 10),
+                                Text(
+                                  'Left Arrow - Move Left',
+                                ),
+                                Text('Right Arrow - Move Right'),
+                                Text('Up Arrow - Rotate (clockwise)'),
+                                Text('Down Arrow - Hard Drop'),
+                              ]),
+                        ),
+                        Container(
                           margin: EdgeInsets.only(bottom: 10.0),
                           child: Text(gameOver ? 'GAME OVER!' : '',
                               style: TextStyle(
