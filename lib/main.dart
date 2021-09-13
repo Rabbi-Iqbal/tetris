@@ -40,16 +40,20 @@ class _MyHomePageState extends State<MyHomePage> {
   int currentRotation = 0;
   List<int> currentTetromino = [];
   Set<int> blockedCells = {};
-  int interval = 300; //miliseconds
+  int interval = 500; //miliseconds
 
   List<int?> currentGrid = List.generate(200, (index) => null);
 
   bool gameInProgress = false;
 
+  late Timer _timer;
+
   bool isValidMove(tetromino) {
     for (var i = 0; i < tetromino.length; i++) {
       if (currentTetromino.contains(tetromino[i])) continue;
-      if (tetromino[i] >= noOfCells || currentGrid[tetromino[i]] != null) {
+      if (tetromino[i] >= noOfCells ||
+          tetromino[i] < 0 ||
+          currentGrid[tetromino[i]] != null) {
         return false;
       }
     }
@@ -60,22 +64,21 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       gameInProgress = true;
     });
+
+    currentTetromino = new List.from(tetrominoes[currentTetrominoType]);
+    currentRotation = 0;
+
+    currentTetromino.forEach((pos) {
+      currentGrid[pos] = currentTetrominoType;
+    });
+
     startTimer();
   }
 
   void startTimer() {
-    currentTetromino = new List.from(tetrominoes[currentTetrominoType]);
-    currentRotation = 0;
-
-    for (var i = 0; i < currentTetromino.length; i++) {
-      currentTetromino[i] += 20;
-    }
-    currentTetromino.forEach((pos) {
-      currentGrid[pos] = currentTetrominoType;
-    });
-    Timer.periodic(
+    _timer = Timer.periodic(
       Duration(milliseconds: interval),
-      (Timer timer) {
+      (timer) {
         setState(() {
           List<int> newPosition = [];
           for (var i = 0; i < currentTetromino.length; i++) {
@@ -90,13 +93,48 @@ class _MyHomePageState extends State<MyHomePage> {
             });
             currentTetromino = newPosition;
           } else {
-            timer.cancel();
             checkForMatchedPattern();
-            startTimer();
+            currentTetromino = new List.from(tetrominoes[currentTetrominoType]);
+            currentRotation = 0;
+            currentTetromino.forEach((pos) {
+              currentGrid[pos] = currentTetrominoType;
+            });
           }
         });
       },
     );
+  }
+
+  void moveDown() {
+    _timer.cancel();
+    while (true) {
+      List<int> newPosition = [];
+      currentTetromino.forEach((pos) {
+        newPosition.add(pos + 10);
+      });
+      if (isValidMove(newPosition)) {
+        setState(() {
+          currentTetromino.forEach((pos) {
+            currentGrid[pos] = null;
+          });
+          newPosition.forEach((pos) {
+            currentGrid[pos] = currentTetrominoType;
+          });
+          currentTetromino = newPosition;
+        });
+      } else {
+        break;
+      }
+    }
+    checkForMatchedPattern();
+    currentTetromino = new List.from(tetrominoes[currentTetrominoType]);
+    currentRotation = 0;
+    setState(() {
+      currentTetromino.forEach((pos) {
+        currentGrid[pos] = currentTetrominoType;
+      });
+    });
+    startTimer();
   }
 
   void moveLeft() {
@@ -425,9 +463,10 @@ class _MyHomePageState extends State<MyHomePage> {
         newPostion[1] = currentTetromino[1] - 1;
         newPostion[2] = currentTetromino[1];
         newPostion[3] = currentTetromino[1] + 1;
-        // this is to ensure that there are atleast 2 cells free to the left 
+        // this is to ensure that there are atleast 2 cells free to the left
         //and 1 cell free to the right (if positioned on the right edge)
-        bool canMove = (currentTetromino.first % 10) > 1 && (currentTetromino.last % 10) < 9;
+        bool canMove = (currentTetromino.first % 10) > 1 &&
+            (currentTetromino.last % 10) < 9;
         if (canMove && isValidMove(newPostion))
           updateCurrentGrid(currentTetromino, newPostion);
         else
@@ -449,9 +488,10 @@ class _MyHomePageState extends State<MyHomePage> {
         newPostion[1] = currentTetromino[2];
         newPostion[2] = currentTetromino[2] + 1;
         newPostion[3] = currentTetromino[2] + 2;
-        // this is to ensure that there are atleast 2 cells free to the right 
+        // this is to ensure that there are atleast 2 cells free to the right
         //and 1 cell free to the left (if positioned on the left edge)
-        bool canMove = (currentTetromino.last % 10) < 8 && (currentTetromino.first % 10) > 0 ;
+        bool canMove = (currentTetromino.last % 10) < 8 &&
+            (currentTetromino.first % 10) > 0;
         if (canMove && isValidMove(newPostion))
           updateCurrentGrid(currentTetromino, newPostion);
         else
@@ -478,6 +518,9 @@ class _MyHomePageState extends State<MyHomePage> {
               if (event.runtimeType.toString() == 'RawKeyDownEvent') {
                 if (event.isKeyPressed(LogicalKeyboardKey.arrowUp)) {
                   rotate();
+                }
+                if (event.isKeyPressed(LogicalKeyboardKey.arrowDown)) {
+                  moveDown();
                 }
                 if (event.isKeyPressed(LogicalKeyboardKey.arrowLeft)) {
                   moveLeft();
@@ -545,7 +588,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                             Icons.rotate_right,
                                           )),
                                       IconButton(
-                                          onPressed: () => {},
+                                          onPressed: moveDown,
                                           iconSize: 30,
                                           icon: Icon(
                                             Icons
