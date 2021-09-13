@@ -556,7 +556,7 @@ class _MyHomePageState extends State<MyHomePage> {
         body: RawKeyboardListener(
             focusNode: FocusNode(),
             onKey: (RawKeyEvent event) {
-              if (event.runtimeType.toString() == 'RawKeyDownEvent') {
+              // if (event.runtimeType.toString() == 'RawKeyDownEvent') {
                 if (event.isKeyPressed(LogicalKeyboardKey.arrowUp)) {
                   rotate();
                 }
@@ -569,7 +569,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 if (event.isKeyPressed(LogicalKeyboardKey.arrowRight)) {
                   moveRight();
                 }
-              }
+              // }
             },
             autofocus: true,
             child: Center(
@@ -670,6 +670,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 Text('Right Arrow - Move Right'),
                                 Text('Up Arrow - Rotate (clockwise)'),
                                 Text('Down Arrow - Hard Drop'),
+                                SizedBox(height: 10),
                               ]),
                         ),
                         Container(
