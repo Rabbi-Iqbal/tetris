@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,6 +12,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -40,6 +42,7 @@ class _MyHomePageState extends State<MyHomePage> {
   int currentRotation = 0;
   List<int> currentTetromino = [];
   Set<int> blockedCells = {};
+  bool gameOver = false;
   int interval = 500; //miliseconds
 
   List<int?> currentGrid = List.generate(200, (index) => null);
@@ -62,18 +65,36 @@ class _MyHomePageState extends State<MyHomePage> {
     return true;
   }
 
+  void spawnRandomTetromino() {
+    Random random = new Random();
+    int randomNumber = random.nextInt(7);
+    setState(() {
+      currentTetromino = new List.from(tetrominoes[randomNumber]);
+      // currentTetromino = new List.from(tetrominoes[1]);
+      currentRotation = 0;
+      currentTetrominoType = randomNumber;
+      // currentTetrominoType = 0;
+      for (int i = 0; i < currentTetromino.length; i++) {
+        if (currentGrid[currentTetromino[i]] != null) {
+          gameInProgress = false;
+          gameOver = true;
+          _timer.cancel();
+          break;
+        }
+        currentGrid[currentTetromino[i]] = currentTetrominoType;
+      }
+    });
+  }
+
   void handleStartClick() {
     setState(() {
       gameInProgress = true;
+      currentGrid = List.generate(200, (index) => null);
+      gameOver = false;
+      score = 0;
     });
 
-    currentTetromino = new List.from(tetrominoes[currentTetrominoType]);
-    currentRotation = 0;
-
-    currentTetromino.forEach((pos) {
-      currentGrid[pos] = currentTetrominoType;
-    });
-
+    spawnRandomTetromino();
     startTimer();
   }
 
@@ -96,11 +117,7 @@ class _MyHomePageState extends State<MyHomePage> {
             currentTetromino = newPosition;
           } else {
             checkForMatchedPattern();
-            currentTetromino = new List.from(tetrominoes[currentTetrominoType]);
-            currentRotation = 0;
-            currentTetromino.forEach((pos) {
-              currentGrid[pos] = currentTetrominoType;
-            });
+            spawnRandomTetromino();
           }
         });
       },
@@ -108,6 +125,9 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void moveDown() {
+    if (!gameInProgress) {
+      return;
+    }
     _timer.cancel();
     while (true) {
       List<int> newPosition = [];
@@ -129,17 +149,14 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     }
     checkForMatchedPattern();
-    currentTetromino = new List.from(tetrominoes[currentTetrominoType]);
-    currentRotation = 0;
-    setState(() {
-      currentTetromino.forEach((pos) {
-        currentGrid[pos] = currentTetrominoType;
-      });
-    });
+    spawnRandomTetromino();
     startTimer();
   }
 
   void moveLeft() {
+    if (!gameInProgress) {
+      return;
+    }
     setState(() {
       //check if there a free cell to the left
       bool canMove = currentTetromino.first % 10 > 0;
@@ -160,6 +177,9 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void moveRight() {
+    if (!gameInProgress) {
+      return;
+    }
     setState(() {
       bool canMove = currentTetromino.last % 10 < 9;
       List<int> newPosition = currentTetromino.map((e) => e + 1).toList();
@@ -505,7 +525,22 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  Color getColor(tetrominoType) {
+    if (tetrominoType == 0) return Colors.amber; //I
+    if (tetrominoType == 1) return Colors.orange.shade200; //J
+    if (tetrominoType == 2) return Colors.brown.shade200; //L
+    if (tetrominoType == 3) return Colors.pink.shade200; //O
+    if (tetrominoType == 4) return Colors.blue.shade200; //S
+    if (tetrominoType == 5) return Colors.green.shade200; //T
+    if (tetrominoType == 6) return Colors.red.shade200; //Z
+
+    return Colors.white;
+  }
+
   void rotate() {
+    if (!gameInProgress) {
+      return;
+    }
     if (currentTetrominoType == 0) rotateI();
     if (currentTetrominoType == 1) rotateJ();
     if (currentTetrominoType == 2) rotateL();
@@ -517,6 +552,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        backgroundColor: Colors.grey.shade300,
         body: RawKeyboardListener(
             focusNode: FocusNode(),
             onKey: (RawKeyEvent event) {
@@ -556,7 +592,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                       padding: const EdgeInsets.all(2.0),
                                       child: Container(
                                         color: currentGrid[index] != null
-                                            ? Colors.white
+                                            ? getColor(currentGrid[index])
                                             : Colors.black,
                                       ),
                                     )),
@@ -616,6 +652,14 @@ class _MyHomePageState extends State<MyHomePage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        Container(
+                          margin: EdgeInsets.only(bottom: 10.0),
+                          child: Text(gameOver ? 'GAME OVER!' : '',
+                              style: TextStyle(
+                                  color: Colors.red.shade900,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold)),
+                        ),
                         Container(
                           width: 140,
                           height: 100,
